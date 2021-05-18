@@ -1,16 +1,21 @@
-#
+#!/usr/bin/env python
 """
 Use:
 python objectdetector.py -v d:/video/DJI_0008.mpg -t csrt
 or
-python objectdetector.py -v d:/video/car_road.avi -t csrt
+python objectdetector.py -v d:/video/car-and-road.ts -t mil
 or
-python objectdetector.py -v d:/video/pena_flight.mp4 -t mosse
+python objectdetector.py -v d:/video/road_bus.mp4 -t csrt
+or
+python objectdetector.py -v d:/video/pena_setka.mp4 -t csrt
 or
 python objectdetector.py -v d:/video/FlightTest/Video_2020_01_23_21_31_54.mp4 -t tld
 
 Press "S" to stop stream and select ROI to tracking
 Mouse left button select ROI than tap SPACE
+Press "l" - to save image
+Press "c" - to enable crosshire or "x" - to disable crosshire
+
 Have a fun !!!
  """
 from imutils.video import VideoStream
@@ -21,12 +26,14 @@ import datetime
 import cv2
 import sys
 import time
+import keyboard
+import numpy as np
 
 # this is required at the time of execution
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
                 help="path to input video file")
-ap.add_argument("-t", "--tracker", type=str, default="mosse",
+ap.add_argument("-t", "--tracker", type=str, default="kcf",
                 help="OpenCV object tracker type")
 args = vars(ap.parse_args())
 
@@ -54,19 +61,24 @@ else:
 fps = None
 
 
-def crosshire():
-    cv2.line(frame, (310, 230), (330, 230), (255, 255, 0), 1)
-    cv2.line(frame, (360, 230), (380, 230), (255, 255, 0), 1)
-    cv2.line(frame, (330, 230), (330, 235), (255, 255, 0), 1)
-    cv2.line(frame, (360, 230), (360, 235), (255, 255, 0), 1)
-    return
+def crosshair():
+    # pts = np.array([[310, 230], [330, 230], [360, 230], [380, 230]], np.int32)
+    # Creating a yellow polygon. Parameter "False" indicates
+    # that our line is not closed
+    # cv2.polylines(frame, [pts], False, (255, 255, 0), 2)
+
+    cv2.line(frame, (310, 220), (330, 220), (255, 255, 0), 1)
+    cv2.line(frame, (360, 220), (380, 220), (255, 255, 0), 1)
+    cv2.line(frame, (345, 220), (345, 220), (255, 255, 0), 2)
+    return crosshair
 
 
 while True:
+
     frame = vs.read()
     frame = frame[1] if args.get("video", False) else frame
     if frame is None:
-        print('No video file')
+        print("No video")
         break
 
     frame = imutils.resize(frame, width=720)
@@ -80,8 +92,8 @@ while True:
             (x, y, w, h) = [int(v) for v in box]
             cv2.rectangle(frame, (x, y), (x + w, y + h),
                           (255, 255, 250), 1)
-            crosshire()
-
+            cv2.putText(frame, args["tracker"], (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (36, 255, 12), 1)
+        crosshair()
         # update the FPS counter
         fps.update()
         fps.stop()
@@ -111,31 +123,19 @@ while True:
         fps = FPS().start()
 
 
+
     elif key == ord("l"):
         initBB = cv2.selectROI("Start Tracking", frame, showCrosshair=True, fromCenter=False)
         imCrop = frame[int(initBB[1]):int(initBB[1] + initBB[3]), int(initBB[0]):int(initBB[0] + initBB[2])]
         cv2.imshow("Preview", imCrop)
         inname = time.strftime("%Y%m%d-%H%M%S")
-        result = cv2.imwrite(r'preview-' + inname + '.png', imCrop)
+        result = cv2.imwrite(r'static/preview-' + inname + '.png', imCrop)
         if result == True:
             print('File saved')
         else:
             print('Error saving file')
         fps = FPS().start()
         cv2.waitKey(1)  # ESC pressed
-
-
-    elif key == ord("x"):
-        def crosshire():
-            return None
-
-    elif key == ord("c"):
-        def crosshire():
-            cv2.line(frame, (310, 230), (330, 230), (255, 255, 0), 1)
-            cv2.line(frame, (360, 230), (380, 230), (255, 255, 0), 1)
-            cv2.line(frame, (330, 230), (330, 235), (255, 255, 0), 1)
-            cv2.line(frame, (360, 230), (360, 235), (255, 255, 0), 1)
-            return
 
 
     elif key == ord('q'):
