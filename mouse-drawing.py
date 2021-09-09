@@ -1,48 +1,104 @@
 #!/usr/bin/env python
 
+'''
+Using Correlation Trackers in Dlib, you can track any object in a video stream without
+needing to train a custom object detector.
+
+Click leftbutton and hold to select object.
+When you will see yellow rectangle push "t"
+Cancel tracking push "r"
+'''
+
 import numpy as np
 import cv2
+import dlib
+import datetime
+import imutils
 
-drawing = False
-point = (0, 0)
+# this variable will hold the coordinates of the mouse click events.
+mousePoints = []
 
-"""
-def mouse_drawing(event, x, y, flags, params):
-    global point, drawing
+
+def mouseEventHandler(event, x, y, flags, param):
+    # references to the global mousePoints variable
+    global mousePoints
+
+    # if the left mouse button was clicked, record the starting coordinates.
     if event == cv2.EVENT_LBUTTONDOWN:
-        drawing = True
-        point = (x, y)
-    elif event == cv2.EVENT_MOUSEMOVE:
-        if drawing is True:
-            point = (x, y)
+        mousePoints = [(x, y)]
 
+    # when the left mouse button is released, record the ending coordinates.
     elif event == cv2.EVENT_LBUTTONUP:
-        drawing = False
-        point = (x, y)
-"""
-
-def mouse_drawing(event, x, y, flags, params):
-    global point, drawing
-    if event == cv2.EVENT_LBUTTONDOWN:
-        drawing = True
-        point = (x, y)
+        mousePoints.append((x, y))
 
 
-cap = cv2.VideoCapture('d:/video/road_bus.mp4')
-cv2.namedWindow("Frame")
-cv2.setMouseCallback("Frame", mouse_drawing)
+# create the video capture.
+video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
+#video_capture = cv2.VideoCapture(0)
+#video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
+
+
+# create a named window in OpenCV and attach the mouse event handler to it.
+cv2.namedWindow("Video stream")
+cv2.setMouseCallback("Video stream", mouseEventHandler)
+
+# initialize the correlation tracker.
+tracker = dlib.correlation_tracker()
+
+# this is the variable indicating whether to track the object or not.
+tracked = False
 
 while True:
-    _, frame = cap.read()
-    if drawing:
-        cv2.rectangle(frame, point, (point[0] + 80, point[1] + 80), (0, 0, 255), 0)
+    # start capturing the video stream.
+    ret, frame = video_capture.read()
+    frame = imutils.resize(frame, width=720)
+    (H, W) = frame.shape[:2]
+    if ret:
+        image = frame
 
-    cv2.imshow("Frame", frame)
-    key = cv2.waitKey(25)
-    if key == 13:
-        print('done')
-    elif key == 27:
+        # if we have two sets of coordinates from the mouse event, draw a rectangle.
+        if len(mousePoints) == 2:
+            cv2.rectangle(image, mousePoints[0], mousePoints[1], (255, 255, 255), 1)
+            dlib_rect = dlib.rectangle(mousePoints[0][0], mousePoints[0][1], mousePoints[1][0], mousePoints[1][1])
+
+        # tracking in progress, update the correlation tracker and get the object position.
+        if tracked == True:
+            tracker.update(image)
+            track_rect = tracker.get_position()
+            x  = int(track_rect.left())
+            y  = int(track_rect.top())
+            x1 = int(track_rect.right())
+            y1 = int(track_rect.bottom())
+            cv2.rectangle(image, (x, y), (x1, y1), (0, 0, 255), 1) # red tracker marker
+
+        # show the current frame.
+        dt = str(datetime.datetime.now())
+        cv2.putText(frame, dt, (W - 230, H - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_8)
+        cv2.putText(frame, "Hold LButton to select target", (W - 700, H - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.38,
+                    (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.putText(frame, "Press 't' to tracking", (W - 700, H - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.38,
+                    (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.imshow("Video stream", image)
+
+    # capture the keyboard event in the OpenCV window.
+    ch = 0xFF & cv2.waitKey(1)
+
+    # press "r" to stop tracking and reset the points.
+    if ch == ord("r"):
+        mousePoints = []
+        tracked = False
+
+    # press "t" to start tracking the currently selected object/area.
+    if ch == ord("t"):
+        if len(mousePoints) == 2:
+            tracker.start_track(image, dlib_rect)
+            tracked = True
+            mousePoints = []
+
+    # press "q" to quit the program.
+    if ch == ord('q'):
         break
 
-cap.release()
+# cleanup.
+video_capture.release()
 cv2.destroyAllWindows()

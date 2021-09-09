@@ -2,6 +2,7 @@
 
 import cv2
 
+
 ############### Tracker Types #####################
 
 #tracker = cv2.TrackerBoosting_create()
@@ -17,28 +18,45 @@ tracker = cv2.TrackerCSRT_create()
 
 print('Now type Start if you want to go back')
 str1 = 'Start'
+drawing = False
+point = (0, 0)
+rect_h = 45
+rect_w = 45
+event = True
 
 while str1 == 'Start':
 
-    cap = cv2.VideoCapture('d:/video/heli-copter.mp4')
+    cap = cv2.VideoCapture('d:/video/hd-demo.mp4')
     # TRACKER INITIALIZATION
     success, frame = cap.read()
     bbox = cv2.selectROI("Tracking", frame, False)
     tracker.init(frame, bbox)
 
 
-    def drawBox(img, bbox):
-        x, y, w, h = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
-        cv2.rectangle(img, (x, y), ((x + w), (y + h)), (255, 255, 0), 1, 1)
-        cv2.putText(img, "Tracking", (100, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1)
+    def mouse_drawing(event, x, y, flags, params):
+        global point, drawing
+        if event == cv2.EVENT_LBUTTONDOWN:
+            drawing = True
+            x2 = x - int(rect_h / 2)
+            y2 = y - int(rect_w / 2)
+            point = (x2, y2)
 
-    while str1 == 'Start':
+
+    def drawBox(img, bbox):
+         x, y, w, h = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
+         cv2.rectangle(img, (x, y), ((x + w), (y + h)), (255, 255, 0), 1, 1)
+         cv2.putText(img, "Tracking", (100, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1)
+
+    while str1 == 'Start' :
         timer = cv2.getTickCount()
         success, img = cap.read()
         success, bbox = tracker.update(img)
+        cv2.setMouseCallback("Tracking", mouse_drawing)
 
-        if success:
+
+        if event == cv2.EVENT_LBUTTONDOWN:
             drawBox(img, bbox)
+            cv2.rectangle(img, point, (point[0] + 80, point[1] + 80), (0, 0, 255), 0)
         else:
             cv2.putText(img, "Lost", (100, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 1)
             pass
@@ -62,4 +80,5 @@ while str1 == 'Start':
 
         if cv2.waitKey(1) & 0xff == ord('q'):
             print('The End')
+            cv2.destroyAllWindows()
             break

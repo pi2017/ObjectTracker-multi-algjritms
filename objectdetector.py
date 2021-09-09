@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
 Use:
-python objectdetector.py -v d:/video/DJI_0008.mpg -t csrt
+python objectdetector.py -v d:/video/hd-demo.mp4 -t csrt
 or
-python objectdetector.py -v d:/video/car-and-road.ts -t mil
+python objectdetector.py -v d:/video/car-and-road.ts -t csrt
 or
 python objectdetector.py -v d:/video/road_bus.mp4 -t csrt
 or
@@ -14,7 +14,6 @@ python objectdetector.py -v d:/video/FlightTest/Video_2020_01_23_21_31_54.mp4 -t
 Press "S" to stop stream and select ROI to tracking
 Mouse left button select ROI than tap SPACE
 Press "l" - to save image
-Press "c" - to enable crosshire or "x" - to disable crosshire
 
 Have a fun !!!
  """
@@ -33,7 +32,7 @@ import numpy as np
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", type=str,
                 help="path to input video file")
-ap.add_argument("-t", "--tracker", type=str, default="kcf",
+ap.add_argument("-t", "--tracker", type=str, default="csrt",
                 help="OpenCV object tracker type")
 args = vars(ap.parse_args())
 
@@ -49,6 +48,22 @@ OPENCV_OBJECT_TRACKERS = {
 tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
 print("tracker: ", args["tracker"])
 initBB = None
+success = None
+key = cv2.waitKey(1) & 0xFF
+drawing = False
+point = (0, 0)
+rect_h = 50
+rect_w = 50
+
+
+def mouse_drawing(event, x, y, flags, params):
+    global point, drawing
+    if event == cv2.EVENT_LBUTTONDOWN:
+        drawing = True
+        x2 = x - int(rect_h / 2)
+        y2 = y - int(rect_w / 2)
+        point = (x2, y2)
+
 
 if not args.get("video", False):
     print("[INFO] starting video stream...")
@@ -83,16 +98,29 @@ while True:
 
     frame = imutils.resize(frame, width=720)
     (H, W) = frame.shape[:2]
-    if initBB is not None:
+    if key == ord("s"):
+        initBB = cv2.selectROI("Start Tracking", frame, showCrosshair=False, fromCenter=False)
+        tracker.init(frame, initBB)
+        fps = FPS().start()
+        (success, box) = tracker.update(frame)
+        cv2.setMouseCallback("Start Tracking", mouse_drawing)
+
+    elif initBB is not None:
         # grab the new bounding box coordinates of the object
         (success, box) = tracker.update(frame)
 
+
         # check to see if the tracking was a success
-        if success:
+        if success & drawing:
+            cv2.rectangle(frame, point, (point[0] + rect_h, point[1] + rect_w), (0, 0, 255), 0)
             (x, y, w, h) = [int(v) for v in box]
+            x2 = x - int(h / 2)
+            y2 = y - int(w / 2)
             cv2.rectangle(frame, (x, y), (x + w, y + h),
                           (255, 255, 250), 1)
-            cv2.putText(frame, args["tracker"], (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (36, 255, 12), 1)
+            cv2.rectangle(frame, (x2, y2), (x2 + 2 * w, y2 + 2 * h),
+                          (10, 10, 10), 1)
+            cv2.putText(frame, args["tracker"], (x, y - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (36, 255, 12), 1)
         crosshair()
         # update the FPS counter
         fps.update()
@@ -117,14 +145,12 @@ while True:
     cv2.imshow("Start Tracking", frame)
     key = cv2.waitKey(1) & 0xFF
 
-    if key == ord("s"):
-        initBB = cv2.selectROI("Start Tracking", frame, showCrosshair=True, fromCenter=False)
-        tracker.init(frame, initBB)
-        fps = FPS().start()
+    # if key == ord("s"):
+    #     initBB = cv2.selectROI("Start Tracking", frame, showCrosshair=False, fromCenter=False)
+    #     tracker.init(frame, initBB)
+    #     fps = FPS().start()
 
-
-
-    elif key == ord("l"):
+    if key == ord("l"):
         initBB = cv2.selectROI("Start Tracking", frame, showCrosshair=True, fromCenter=False)
         imCrop = frame[int(initBB[1]):int(initBB[1] + initBB[3]), int(initBB[0]):int(initBB[0] + initBB[2])]
         cv2.imshow("Preview", imCrop)
@@ -136,7 +162,6 @@ while True:
             print('Error saving file')
         fps = FPS().start()
         cv2.waitKey(1)  # ESC pressed
-
 
     elif key == ord('q'):
         print("Tracking stop by customer... ")
