@@ -15,6 +15,19 @@ import dlib
 import datetime
 import imutils
 
+
+def crosshair():
+    # pts = np.array([[310, 230], [330, 230], [360, 230], [380, 230]], np.int32)
+    # Creating a yellow polygon. Parameter "False" indicates
+    # that our line is not closed
+    # cv2.polylines(frame, [pts], False, (255, 255, 0), 2)
+
+    cv2.line(frame, (310, 220), (330, 220), (255, 255, 0), 1)
+    cv2.line(frame, (360, 220), (380, 220), (255, 255, 0), 1)
+    cv2.line(frame, (345, 220), (345, 220), (255, 255, 0), 2)
+    return crosshair
+
+
 # this variable will hold the coordinates of the mouse click events.
 mousePoints = []
 
@@ -72,6 +85,7 @@ while True:
             cv2.rectangle(image, (x, y), (x1, y1), (0, 0, 255), 1) # red tracker marker
 
         # show the current frame.
+        crosshair()
         dt = str(datetime.datetime.now())
         cv2.putText(frame, dt, (W - 230, H - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_8)
         cv2.putText(frame, "Hold LButton to select target", (W - 700, H - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.38,
@@ -100,5 +114,6 @@ while True:
         break
 
 # cleanup.
+print('The End')
 video_capture.release()
 cv2.destroyAllWindows()
