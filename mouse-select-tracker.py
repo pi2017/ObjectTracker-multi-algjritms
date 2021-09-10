@@ -46,9 +46,9 @@ def mouseEventHandler(event, x, y, flags, param):
 
 
 # create the video capture.
-video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
-#video_capture = cv2.VideoCapture(0)
-#video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
+# video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
+video_capture = cv2.VideoCapture('d:/video/aeropract/aeropract-hd.m2ts')
+# video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
 
 
 # create a named window in OpenCV and attach the mouse event handler to it.
@@ -78,11 +78,13 @@ while True:
         if tracked == True:
             tracker.update(image)
             track_rect = tracker.get_position()
-            x  = int(track_rect.left())
-            y  = int(track_rect.top())
+            x = int(track_rect.left())
+            y = int(track_rect.top())
             x1 = int(track_rect.right())
             y1 = int(track_rect.bottom())
-            cv2.rectangle(image, (x, y), (x1, y1), (0, 0, 255), 1) # red tracker marker
+
+            cv2.rectangle(image, (x, y), (x1, y1), (0, 0, 255), 1)  # red tracker marker
+            cv2.putText(frame, "TARGET", (x - 4, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_8)
 
         # show the current frame.
         crosshair()
