@@ -47,7 +47,7 @@ def mouseEventHandler(event, x, y, flags, param):
 
 # create the video capture.
 # video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
-video_capture = cv2.VideoCapture('d:/video/aeropract/aeropract-hd.m2ts')
+video_capture = cv2.VideoCapture('d:/video/aeropract/aero-hd.m2ts')
 # video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
 
 
