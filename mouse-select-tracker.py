@@ -14,7 +14,6 @@ import cv2
 import dlib
 import datetime
 import imutils
-import numpy as np
 
 rect_h = 50
 rect_w = 50
@@ -28,6 +27,7 @@ markers = [
     # cv2.MARKER_TRIANGLE_UP,
     # cv2.MARKER_TRIANGLE_DOWN
 ]
+
 
 def draw_border(img, pt1, pt2, color, thickness, r, d):
     x1, y1 = pt1
@@ -49,6 +49,8 @@ def draw_border(img, pt1, pt2, color, thickness, r, d):
     cv2.line(img, (x2, y2 - r), (x2, y2 - r - d), color, thickness)
     cv2.ellipse(img, (x2 - r, y2 - r), (r, r), 0, 0, 90, color, thickness)
 
+
+"""
 def crosshair():
     # pts = np.array([[310, 230], [330, 230], [360, 230], [380, 230]], np.int32)
     # Creating a yellow polygon. Parameter "False" indicates
@@ -59,7 +61,7 @@ def crosshair():
     cv2.line(frame, (360, 220), (380, 220), (255, 255, 0), 1)
     cv2.line(frame, (345, 220), (345, 220), (255, 255, 0), 2)
     return crosshair
-
+"""
 
 # this variable will hold the coordinates of the mouse click events.
 mousePoints = []
@@ -80,8 +82,8 @@ def mouseEventHandler(event, x, y, flags, param):
 
 # create the video capture.
 video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
-#video_capture = cv2.VideoCapture('d:/video/aeropract/aero-hd.m2ts')
-#video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
+# video_capture = cv2.VideoCapture('d:/video/aero/aero-hd.m2ts')
+# video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
 
 
 # create a named window in OpenCV and attach the mouse event handler to it.
@@ -102,7 +104,6 @@ while True:
     if ret:
         image = frame
 
-
         # if we have two sets of coordinates from the mouse event, draw a rectangle.
         if len(mousePoints) == 2:
             cv2.rectangle(image, mousePoints[0], mousePoints[1], (255, 255, 255), 1)
@@ -117,10 +118,8 @@ while True:
             x1 = int(track_rect.right())
             y1 = int(track_rect.bottom())
 
-
-
             # Draw rectangle for target
-            #cv2.rectangle(image, (x, y), (x1, y1), (0, 0, 255), 1)  # red tracker marker
+            # cv2.rectangle(image, (x, y), (x1, y1), (0, 0, 255), 1)  # red tracker marker
             cv2.putText(frame, "TARGET", (x - 4, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_8)
             # Draw crosshair for target
             draw_border(image, (x, y), (x1, y1), (127, 255, 255), 1, 3, 9)
