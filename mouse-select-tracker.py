@@ -15,8 +15,6 @@ import dlib
 import datetime
 import imutils
 
-rect_h = 50
-rect_w = 50
 
 markers = [
     cv2.MARKER_CROSS,
@@ -81,10 +79,10 @@ def mouseEventHandler(event, x, y, flags, param):
 
 
 # create the video capture.
-video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
-# video_capture = cv2.VideoCapture('d:/video/aero/aero-hd.m2ts')
 # video_capture = cv2.VideoCapture('d:/video/hd-demo.mp4')
-
+# video_capture = cv2.VideoCapture('d:/video/aero/aero-hd.m2ts')
+# video_capture = cv2.VideoCapture('d:/video/car-and-road.ts')
+video_capture = cv2.VideoCapture('d:/video/people-car.mp4')
 
 # create a named window in OpenCV and attach the mouse event handler to it.
 cv2.namedWindow("Video stream")
@@ -99,11 +97,13 @@ tracked = False
 while True:
     # start capturing the video stream.
     ret, frame = video_capture.read()
+
+    if frame is None:
+        break
     frame = imutils.resize(frame, width=1080)
     (H, W) = frame.shape[:2]
     if ret:
         image = frame
-
         # if we have two sets of coordinates from the mouse event, draw a rectangle.
         if len(mousePoints) == 2:
             cv2.rectangle(image, mousePoints[0], mousePoints[1], (255, 255, 255), 1)
@@ -152,7 +152,8 @@ while True:
     if ch == ord('q'):
         break
 
+
 # cleanup windows
-print('The End')
 video_capture.release()
 cv2.destroyAllWindows()
+print("Finished capture")
